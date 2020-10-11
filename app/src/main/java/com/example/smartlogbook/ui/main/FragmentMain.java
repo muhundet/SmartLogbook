@@ -1,10 +1,14 @@
 package com.example.smartlogbook.ui.main;
 
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
@@ -12,7 +16,22 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.example.smartlogbook.R;
+import com.example.smartlogbook.database.OpenHelper;
+import com.example.smartlogbook.network.VolleyUtil;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -20,12 +39,13 @@ import com.example.smartlogbook.R;
 public class FragmentMain extends Fragment {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
-    public static final String URL_SAVE_TO_SERVER = "http://192.168.1.107/SqliteSync/saveRegisterEntry.php";
+    public static final String URL_SAVE_TO_SERVER = "http://192.168.1.107/saveRegisterEntry.php";
     public static final int ENTRY_SYNCED_WITH_SERVER = 1;
     public static final int ENTRY_NOT_SYNCED_WITH_SERVER = 0;
     public static final String DATA_SAVED_BROADCAST = "com.example.datasaved";
-    private PageViewModel pageViewModel;
-
+    private RegisterViewModel mRegisterViewModel;
+    private IntentIntegrator qrScan;
+    private OpenHelper db;
     public static FragmentMain newInstance(int index) {
         FragmentMain fragment = new FragmentMain();
         Bundle bundle = new Bundle();
@@ -37,12 +57,14 @@ public class FragmentMain extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        pageViewModel = ViewModelProviders.of(this).get(PageViewModel.class);
+        mRegisterViewModel = ViewModelProviders.of(this).get(RegisterViewModel.class);
         int index = 1;
         if (getArguments() != null) {
             index = getArguments().getInt(ARG_SECTION_NUMBER);
         }
-        pageViewModel.setIndex(index);
+        mRegisterViewModel.setIndex(index);
+
+        db = new OpenHelper(getContext());
     }
 
     @Override
@@ -51,12 +73,110 @@ public class FragmentMain extends Fragment {
             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_main, container, false);
         final TextView textView = root.findViewById(R.id.section_label);
-        pageViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
+        final Button btnScanQr = root.findViewById(R.id.btn_scan_qr);
+        mRegisterViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
+
+        btnScanQr.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                qrScan.initiateScan();
+            }
+        });
         return root;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            //if qrcode has nothing in it
+            if (result.getContents() == null) {
+                Toast.makeText(getContext(), "Result Not Found", Toast.LENGTH_LONG).show();
+            } else {
+                //if qr contains data
+                try {
+                    //converting the data to json
+                    JSONObject employeeDetailJson = new JSONObject(result.getContents());
+
+//                    TODO: read the json info on QR and save to db
+
+//                    insertRegisterEntries(new MeetingsOpenHelper(this));
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    //if control comes here that means the encoded format not matches in this case you can display whatever data is available on the qrcode to a toast
+                    Toast.makeText(getContext(), result.getContents(), Toast.LENGTH_LONG).show();
+                }
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+     void saveRegisterEntryToServer(final String employeeId) {
+        final ProgressDialog progressDialog = new ProgressDialog(getContext());
+        progressDialog.setMessage("Saving Name...");
+        progressDialog.show();
+
+        final String registerEntryId = "movelast";
+        final String mDate = "today";
+        final String mTimeIn = "now";
+        final String mTimeOut = "later";
+        final String mStatus = String.valueOf(ENTRY_SYNCED_WITH_SERVER);
+        final String mNotStatus = String.valueOf(ENTRY_NOT_SYNCED_WITH_SERVER);
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_SAVE_TO_SERVER,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        progressDialog.dismiss();
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+                                //if there is a success
+                                //storing the name to sqlite with status synced
+                                saveRegisterEntryToLocalStorage(registerEntryId, employeeId, mDate, mTimeIn, mTimeOut, mStatus);
+                            } else {
+                                //if there is some error
+                                //saving the name to sqlite with status unsynced
+                                saveRegisterEntryToLocalStorage(registerEntryId, employeeId, mDate, mTimeIn, mTimeOut, mNotStatus);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressDialog.dismiss();
+                        //on error storing the name to sqlite with status unsynced
+                        saveRegisterEntryToLocalStorage(registerEntryId, employeeId, mDate, mTimeIn, mTimeOut, mNotStatus);
+                    }
+                }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("register_entry_id", registerEntryId);
+                params.put("employee_id", employeeId);
+                params.put("date", mDate);
+                params.put("time_in", mTimeIn);
+                params.put("time_out", mTimeOut);
+                return params;
+            }
+        };
+
+        VolleyUtil.getInstance(getContext()).addToRequestQueue(stringRequest);
+    }
+
+    private void saveRegisterEntryToLocalStorage(String registerEntryId, String employeeId, String date, String timeIn, String timeOut, String status) {
+
+        db.saveRegisterEntry(registerEntryId, employeeId, date, timeIn, timeOut, status);
+//        TODO: notify data changed to current and all registers
     }
 }
