@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SmartLogbook</string>
+    <string name="tab_text_1">Main</string>
+    <string name="tab_text_2">Current Register</string>
+    <string name="tab_text_3">All Registers</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
