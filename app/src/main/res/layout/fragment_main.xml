@@ -11,12 +11,9 @@
         android:id="@+id/btn_scan_qr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="68dp"
         android:text="Scan Employee QR"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_number_logged_in" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/section_label"
@@ -57,14 +54,22 @@
         app:layout_constraintTop_toBottomOf="@+id/tv_time" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/btn_manual_entry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:text="Manual Entry"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_scan_qr" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_current_register"
+        android:layout_width="409dp"
+        android:layout_height="633dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_number_logged_in"
+        tools:listitem="@layout/employee_list_item" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
