@@ -49,13 +49,13 @@ public class OpenHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean updateRegisterEntryStatus(String registerEntryID, int status) {
+    public void updateRegisterEntryStatus(String registerEntryID, int status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_STATUS, status);
         db.update(TABLE_NAME, contentValues, DatabaseContract.RegisterEntry.COLUMN_REGISTER_ENTRY_ID + "=" + registerEntryID, null);
         db.close();
-        return true;
+        ;
     }
 
 
@@ -74,5 +74,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         Cursor c = db.rawQuery(sql, null);
         return c;
     }
+
+//    TODO; To add a method that returns the last element so as to use it as register entry id
 
 }

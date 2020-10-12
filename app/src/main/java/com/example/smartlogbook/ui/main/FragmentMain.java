@@ -124,6 +124,7 @@ public class FragmentMain extends Fragment {
         progressDialog.show();
 
         final String registerEntryId = "movelast";
+//        TODO: to get the string values of date and time
         final String mDate = "today";
         final String mTimeIn = "now";
         final String mTimeOut = "later";
