@@ -60,8 +60,11 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     public Cursor getRegisterByDate(String employeeId, String date) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + " = " + date + ";";
+        //String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + " = " + date + ";";
 //        TODO: Select register entries by date and merge with employee table-->
+        String sql = "SELECT * FROM " + DatabaseContract.RegisterEntry.TABLE_NAME + " INNER JOIN " + DatabaseContract.EmployeesEntry.TABLE_NAME
+                + " ON " + DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID + " = " + DatabaseContract.EmployeesEntry.COLUMN_EMPLOYEE_ID
+                + " WHERE " + COLUMN_DATE + " = " +  date;
         return db.rawQuery(sql, null);
     }
 
@@ -76,7 +79,7 @@ public class OpenHelper extends SQLiteOpenHelper {
 //        TODO; To add a method that returns the last element so as to use it as register entry id
 
     public Boolean hasLoggedIn(String EmployeeID){
-//        TODO: check if employee already logged in
+//        TODO: check if employee already clocked in
         return false;
     }
 }

@@ -15,6 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -57,6 +59,7 @@ public class FragmentMain extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         mRegisterViewModel = ViewModelProviders.of(this).get(RegisterViewModel.class);
         int index = 1;
         if (getArguments() != null) {
@@ -74,12 +77,17 @@ public class FragmentMain extends Fragment {
         View root = inflater.inflate(R.layout.fragment_main, container, false);
         final TextView textView = root.findViewById(R.id.section_label);
         final Button btnScanQr = root.findViewById(R.id.btn_scan_qr);
+        final RecyclerView rv = root.findViewById(R.id.rv_current_register);
         mRegisterViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
+        mRegisterViewModel.populateRegisterEntries();
+        final CurrentRegisterRecyclerAdapter adapter = new CurrentRegisterRecyclerAdapter();
+        rv.setLayoutManager(new LinearLayoutManager(getContext()));
+        rv.setAdapter(adapter);
 
         btnScanQr.setOnClickListener(new View.OnClickListener() {
             @Override

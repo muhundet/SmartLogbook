@@ -21,6 +21,7 @@
         android:id="@+id/btn_search_register"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:rotationY="-29"
         android:src="@android:drawable/ic_menu_search"
         app:layout_constraintStart_toEndOf="@+id/et_search_register"
         app:layout_constraintTop_toTopOf="parent" />
