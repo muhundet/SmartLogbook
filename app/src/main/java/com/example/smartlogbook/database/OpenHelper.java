@@ -8,6 +8,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
 
+import com.example.smartlogbook.models.RegisterEntryModel;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.example.smartlogbook.database.DatabaseContract.RegisterEntry.COLUMN_DATE;
 import static com.example.smartlogbook.database.DatabaseContract.RegisterEntry.COLUMN_STATUS;
 import static com.example.smartlogbook.database.DatabaseContract.RegisterEntry.TABLE_NAME;
@@ -15,6 +20,7 @@ import static com.example.smartlogbook.database.DatabaseContract.RegisterEntry.T
 public class OpenHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "SmartLogbook.db";
     public static final int DATABASE_VERSION = 1;
+    private final List<RegisterEntryModel> registerEntry = new ArrayList<>();
 
     public OpenHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -33,6 +39,7 @@ public class OpenHelper extends SQLiteOpenHelper {
     }
 
     public boolean saveRegisterEntry(String registerEntryId, String employeeId, String date, String timeIn, String timeOut, String status) {
+//        TODO: the calling method should check if the user already clocked in today
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
@@ -58,7 +65,7 @@ public class OpenHelper extends SQLiteOpenHelper {
     }
 
 
-    public Cursor getRegisterByDate(String employeeId, String date) {
+    public Cursor getRegisterByDate( String date) {
         SQLiteDatabase db = this.getReadableDatabase();
         //String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + " = " + date + ";";
 //        TODO: Select register entries by date and merge with employee table-->
@@ -78,8 +85,40 @@ public class OpenHelper extends SQLiteOpenHelper {
 
 //        TODO; To add a method that returns the last element so as to use it as register entry id
 
-    public Boolean hasLoggedIn(String EmployeeID){
-//        TODO: check if employee already clocked in
+    public Boolean isLoggedInAlready(String employeeID){
+        Cursor cursor = getRegisterByDate( "datenow");
+        cursor.moveToFirst();
+        while(cursor.moveToNext()){
+            if(cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID))== employeeID){
+                return true;
+            }
+        }
+//        TODO: check if employee already clocked in check with today's date
         return false;
+    }
+
+    public List populateRegisterEntries(){
+        registerEntry.clear();
+        Cursor cursor = getRegisterByDate( "datenow");
+        if (cursor.moveToFirst()) {
+            do {
+                RegisterEntryModel name = new RegisterEntryModel(
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_REGISTER_ENTRY_ID)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.EmployeesEntry.COLUMN_FIRST_NAME)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.EmployeesEntry.COLUMN_SURNAME)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.EmployeesEntry.COLUMN_DEPARTMENT)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_DATE)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_TIME_IN)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_TIME_OUT)),
+                        cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_STATUS))
+                );
+                registerEntry.add(name);
+            } while (cursor.moveToNext());
+
+        }else{
+///        TODO: show the user that there are no records yet
+        }
+        return registerEntry;
     }
 }

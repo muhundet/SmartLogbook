@@ -1,6 +1,7 @@
 package com.example.smartlogbook.ui.main;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -26,6 +28,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.smartlogbook.R;
 import com.example.smartlogbook.database.OpenHelper;
 import com.example.smartlogbook.network.VolleyUtil;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -84,7 +87,7 @@ public class FragmentMain extends Fragment {
                 textView.setText(s);
             }
         });
-        mRegisterViewModel.populateRegisterEntries();
+        //mRegisterViewModel.populateRegisterEntries();
         final CurrentRegisterRecyclerAdapter adapter = new CurrentRegisterRecyclerAdapter();
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         rv.setAdapter(adapter);
@@ -187,5 +190,21 @@ public class FragmentMain extends Fragment {
 
         db.saveRegisterEntry(registerEntryId, employeeId, date, timeIn, timeOut, status);
 //        TODO: notify data changed to current and all registers
+    }
+
+    private void createLoginDialog() {
+        new AlertDialog.Builder(getContext()).setView(R.layout.dialog_employeeID).setPositiveButton("Enter Employee ID", new DialogInterface.OnClickListener() {@Override
+        public void onClick(DialogInterface dialogInterface, int i) {
+            AlertDialog dialog = (AlertDialog) dialogInterface;
+            TextInputEditText employeeID = dialog.findViewById(R.id.employeeID_input);
+            if (employeeID != null && employeeID.getText() != null ) {
+                String employeeId = employeeID.getText().toString();
+                if (employeeId.trim().length() > 0 ) {
+                    //TODO: check if employeeis Logged in, if not save to database else update timeout
+                }
+            }
+            dialog.dismiss();
+        }
+        }).show();
     }
 }
