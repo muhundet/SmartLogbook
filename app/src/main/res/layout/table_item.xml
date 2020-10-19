@@ -14,14 +14,7 @@
         android:textColor="@color/colorPrimaryDark" />
 
     <TextView
-        android:id="@+id/tv_table_name"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_weight="0.25"
-        android:textColor="@color/colorPrimaryDark" />
-    <TextView
-        android:id="@+id/tv_table_employee_id"
+        android:id="@+id/tv_table_surname"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -29,7 +22,15 @@
         android:textColor="@color/colorPrimaryDark" />
 
     <TextView
-        android:id="@+id/tv_table_surname"
+        android:id="@+id/tv_table_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_weight="0.25"
+        android:textColor="@color/colorPrimaryDark" />
+
+    <TextView
+        android:id="@+id/tv_table_employee_id"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"

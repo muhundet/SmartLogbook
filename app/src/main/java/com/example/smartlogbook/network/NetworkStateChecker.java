@@ -37,7 +37,7 @@ public class NetworkStateChecker extends BroadcastReceiver {
         db = new OpenHelper(context);
 
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo(); //TODO: add network permission
 
         //if there is a network
         if (activeNetwork != null) {

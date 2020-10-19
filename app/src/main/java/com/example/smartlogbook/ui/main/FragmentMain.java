@@ -25,8 +25,10 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.smartlogbook.MainActivity;
 import com.example.smartlogbook.R;
 import com.example.smartlogbook.database.OpenHelper;
+import com.example.smartlogbook.models.RegisterEntryModel;
 import com.example.smartlogbook.network.VolleyUtil;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -35,7 +37,9 @@ import com.google.zxing.integration.android.IntentResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -80,6 +84,7 @@ public class FragmentMain extends Fragment {
         View root = inflater.inflate(R.layout.fragment_main, container, false);
         final TextView textView = root.findViewById(R.id.section_label);
         final Button btnScanQr = root.findViewById(R.id.btn_scan_qr);
+        final Button btnManualEntry = root.findViewById(R.id.btn_manual_entry);
         final RecyclerView rv = root.findViewById(R.id.rv_current_register);
         mRegisterViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
@@ -87,14 +92,26 @@ public class FragmentMain extends Fragment {
                 textView.setText(s);
             }
         });
-        //mRegisterViewModel.populateRegisterEntries();
-        final CurrentRegisterRecyclerAdapter adapter = new CurrentRegisterRecyclerAdapter();
-        rv.setLayoutManager(new LinearLayoutManager(getContext()));
-        rv.setAdapter(adapter);
+        mRegisterViewModel.getListRegisterEntry().observe(getViewLifecycleOwner(), new Observer<List<RegisterEntryModel>>() {
+            @Override
+            public void onChanged(List<RegisterEntryModel> registerEntryModels) {
+                final CurrentRegisterRecyclerAdapter adapter = new CurrentRegisterRecyclerAdapter((ArrayList<RegisterEntryModel>) registerEntryModels);
+                rv.setLayoutManager(new LinearLayoutManager(getContext()));
+                rv.setAdapter(adapter);
+            }
+        });
 
+
+        btnManualEntry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                enterEmployeeIdDialog();
+            }
+        });
         btnScanQr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+//                qrScan = new IntentIntegrator(getViewLifecycleOwner());
                 qrScan.initiateScan();
             }
         });
@@ -113,10 +130,14 @@ public class FragmentMain extends Fragment {
                 try {
                     //converting the data to json
                     JSONObject employeeDetailJson = new JSONObject(result.getContents());
-
 //                    TODO: read the json info on QR and save to db
+                    String employeeId = employeeDetailJson.getString("employeeID");
+                    if(!OpenHelper.getOpenHelperInstance().isLoggedInAlready(employeeId)){
+                        saveRegisterEntryToServer(employeeId);
+                    }else{
+//                        TODO: update to server and local
 
-//                    insertRegisterEntries(new MeetingsOpenHelper(this));
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -131,7 +152,7 @@ public class FragmentMain extends Fragment {
 
      void saveRegisterEntryToServer(final String employeeId) {
         final ProgressDialog progressDialog = new ProgressDialog(getContext());
-        progressDialog.setMessage("Saving Name...");
+        progressDialog.setMessage("Clocking for Employee:" + employeeId);
         progressDialog.show();
 
         final String registerEntryId = "movelast";
@@ -192,15 +213,21 @@ public class FragmentMain extends Fragment {
 //        TODO: notify data changed to current and all registers
     }
 
-    private void createLoginDialog() {
-        new AlertDialog.Builder(getContext()).setView(R.layout.dialog_employeeID).setPositiveButton("Enter Employee ID", new DialogInterface.OnClickListener() {@Override
+    private void enterEmployeeIdDialog() {
+        new AlertDialog.Builder(getContext()).setView(R.layout.dialog_manual_entry).setPositiveButton("Clock In", new DialogInterface.OnClickListener() {@Override
         public void onClick(DialogInterface dialogInterface, int i) {
             AlertDialog dialog = (AlertDialog) dialogInterface;
-            TextInputEditText employeeID = dialog.findViewById(R.id.employeeID_input);
+            TextInputEditText employeeID = dialog.findViewById(R.id.manual_entry_input);
             if (employeeID != null && employeeID.getText() != null ) {
                 String employeeId = employeeID.getText().toString();
                 if (employeeId.trim().length() > 0 ) {
                     //TODO: check if employeeis Logged in, if not save to database else update timeout
+                    if(!OpenHelper.getOpenHelperInstance().isLoggedInAlready(employeeId)){
+                        saveRegisterEntryToServer(employeeId);
+                    }else{
+//                        TODO: update to server and local
+
+                    }
                 }
             }
             dialog.dismiss();

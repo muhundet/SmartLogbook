@@ -21,9 +21,9 @@ public class RegisterViewModel extends ViewModel {
 
     private OpenHelper db ;
 //    new OpenHelper(MainActivity.this); TODO: context in view model class
-    private List<RegisterEntryModel> registerEntry = new ArrayList<>();
+    private List registerEntry = new ArrayList<>();
     private MutableLiveData<Integer> mIndex = new MutableLiveData<>();
-    private MutableLiveData<List<RegisterEntryModel>> mRegisterEntryMutableData = new MutableLiveData<>();
+    private MutableLiveData<ArrayList<RegisterEntryModel>> mRegisterEntryMutableData = new MutableLiveData<>();
 
     private LiveData<String> mText = Transformations.map(mIndex, new Function<Integer, String>() {
         @Override
@@ -38,6 +38,12 @@ public class RegisterViewModel extends ViewModel {
 
     public LiveData<String> getText() {
         return mText;
+    }
+
+    public LiveData<ArrayList<RegisterEntryModel>> getListRegisterEntry(){
+        registerEntry = OpenHelper.getOpenHelperInstance().getListRegisterEntries();
+        mRegisterEntryMutableData.setValue((ArrayList<RegisterEntryModel>) registerEntry);
+        return mRegisterEntryMutableData;
     }
 
 

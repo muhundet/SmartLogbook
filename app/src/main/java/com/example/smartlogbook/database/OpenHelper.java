@@ -18,12 +18,22 @@ import static com.example.smartlogbook.database.DatabaseContract.RegisterEntry.C
 import static com.example.smartlogbook.database.DatabaseContract.RegisterEntry.TABLE_NAME;
 
 public class OpenHelper extends SQLiteOpenHelper {
+    private static SQLiteOpenHelper mOpenHelperInstance = null;
     public static final String DATABASE_NAME = "SmartLogbook.db";
     public static final int DATABASE_VERSION = 1;
     private final List<RegisterEntryModel> registerEntry = new ArrayList<>();
+    private static Context mContext;
 
     public OpenHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        mContext = context;
+    }
+
+    public static OpenHelper getOpenHelperInstance(){
+        if(mOpenHelperInstance == null){
+            mOpenHelperInstance = new OpenHelper(mContext);
+        }
+        return (OpenHelper) mOpenHelperInstance;
     }
 
     @Override
@@ -70,8 +80,17 @@ public class OpenHelper extends SQLiteOpenHelper {
         //String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + " = " + date + ";";
 //        TODO: Select register entries by date and merge with employee table-->
         String sql = "SELECT * FROM " + DatabaseContract.RegisterEntry.TABLE_NAME + " INNER JOIN " + DatabaseContract.EmployeesEntry.TABLE_NAME
-                + " ON " + DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID + " = " + DatabaseContract.EmployeesEntry.COLUMN_EMPLOYEE_ID
-                + " WHERE " + COLUMN_DATE + " = " +  date;
+                + " ON " + TABLE_NAME +"."+ DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID + " = " + DatabaseContract.EmployeesEntry.TABLE_NAME + "." + DatabaseContract.EmployeesEntry.COLUMN_EMPLOYEE_ID
+                + " WHERE " + DatabaseContract.RegisterEntry.COLUMN_DATE + " = " +  date;
+        return db.rawQuery(sql, null);
+    }
+
+    public Cursor getRegister( ) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        //String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + " = " + date + ";";
+//        TODO: Select register entries by date and merge with employee table-->
+        String sql = "SELECT * FROM " + DatabaseContract.RegisterEntry.TABLE_NAME + " INNER JOIN " + DatabaseContract.EmployeesEntry.TABLE_NAME
+                + " ON " + DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID + " = " + DatabaseContract.EmployeesEntry.COLUMN_EMPLOYEE_ID;
         return db.rawQuery(sql, null);
     }
 
@@ -86,7 +105,7 @@ public class OpenHelper extends SQLiteOpenHelper {
 //        TODO; To add a method that returns the last element so as to use it as register entry id
 
     public Boolean isLoggedInAlready(String employeeID){
-        Cursor cursor = getRegisterByDate( "datenow");
+        Cursor cursor = getRegisterByDate( "'datenow'");
         cursor.moveToFirst();
         while(cursor.moveToNext()){
             if(cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID))== employeeID){
@@ -97,9 +116,9 @@ public class OpenHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    public List populateRegisterEntries(){
+    public List getListRegisterEntries(){
         registerEntry.clear();
-        Cursor cursor = getRegisterByDate( "datenow");
+        Cursor cursor = getRegisterByDate("'datenow'");
         if (cursor.moveToFirst()) {
             do {
                 RegisterEntryModel name = new RegisterEntryModel(
@@ -115,10 +134,12 @@ public class OpenHelper extends SQLiteOpenHelper {
                 );
                 registerEntry.add(name);
             } while (cursor.moveToNext());
-
-        }else{
+            {
 ///        TODO: show the user that there are no records yet
-        }
+            }
+        }else
         return registerEntry;
+        return null;
     }
+
 }

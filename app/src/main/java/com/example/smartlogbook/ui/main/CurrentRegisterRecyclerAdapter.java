@@ -18,6 +18,11 @@ import java.util.ArrayList;
 public class CurrentRegisterRecyclerAdapter extends RecyclerView.Adapter<CurrentRegisterRecyclerAdapter.CurrentRegisterViewHolder> {
 
     ArrayList<RegisterEntryModel> registerEntries;
+
+    public CurrentRegisterRecyclerAdapter(ArrayList<RegisterEntryModel> registerEntries) {
+        this.registerEntries = registerEntries;
+    }
+
     @NonNull
     @Override
     public CurrentRegisterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
