@@ -10,7 +10,9 @@ import androidx.annotation.Nullable;
 
 import com.example.smartlogbook.models.RegisterEntryModel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.example.smartlogbook.database.DatabaseContract.RegisterEntry.COLUMN_DATE;
@@ -104,11 +106,13 @@ public class OpenHelper extends SQLiteOpenHelper {
 
 //        TODO; To add a method that returns the last element so as to use it as register entry id
 
+
     public Boolean isLoggedInAlready(String employeeID){
-        Cursor cursor = getRegisterByDate( "'datenow'");
+        String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        Cursor cursor = getRegisterByDate( "'" + currentDate + "'");
         cursor.moveToFirst();
         while(cursor.moveToNext()){
-            if(cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID))== employeeID){
+            if(cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID)).equals(employeeID)){
                 return true;
             }
         }
@@ -118,7 +122,8 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     public List getListRegisterEntries(){
         registerEntry.clear();
-        Cursor cursor = getRegisterByDate("'datenow'");
+        String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        Cursor cursor = getRegisterByDate( "'" + currentDate + "'");
         if (cursor.moveToFirst()) {
             do {
                 RegisterEntryModel name = new RegisterEntryModel(

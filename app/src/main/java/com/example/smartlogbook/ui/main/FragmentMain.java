@@ -1,5 +1,6 @@
 package com.example.smartlogbook.ui.main;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -37,7 +38,9 @@ import com.google.zxing.integration.android.IntentResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +114,7 @@ public class FragmentMain extends Fragment {
         btnScanQr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                qrScan = new IntentIntegrator(getViewLifecycleOwner());
+//                qrScan = new IntentIntegrator(Activity.getClass());
                 qrScan.initiateScan();
             }
         });
@@ -155,11 +158,13 @@ public class FragmentMain extends Fragment {
         progressDialog.setMessage("Clocking for Employee:" + employeeId);
         progressDialog.show();
 
+         String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+         String currentTime = new SimpleDateFormat("HH:mm:ss").format(new Date());
         final String registerEntryId = "movelast";
 //        TODO: to get the string values of date and time
-        final String mDate = "today";
-        final String mTimeIn = "now";
-        final String mTimeOut = "later";
+        final String mDate = currentDate;
+        final String mTimeIn = currentTime;
+        final String mTimeOut = "";
         final String mStatus = String.valueOf(ENTRY_SYNCED_WITH_SERVER);
         final String mNotStatus = String.valueOf(ENTRY_NOT_SYNCED_WITH_SERVER);
 
