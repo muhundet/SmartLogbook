@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -23,7 +24,7 @@ public class OpenHelper extends SQLiteOpenHelper {
     private static SQLiteOpenHelper mOpenHelperInstance = null;
     public static final String DATABASE_NAME = "SmartLogbook.db";
     public static final int DATABASE_VERSION = 1;
-    private final List<RegisterEntryModel> registerEntry = new ArrayList<>();
+    ArrayList<RegisterEntryModel> registerEntry = new ArrayList<>();
     private static Context mContext;
 
     public OpenHelper(@Nullable Context context) {
@@ -50,12 +51,11 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     }
 
-    public boolean saveRegisterEntry(String registerEntryId, String employeeId, String date, String timeIn, String timeOut, String status) {
+    public boolean saveRegisterEntry(String employeeId, String date, String timeIn, String timeOut, String status) {
 //        TODO: the calling method should check if the user already clocked in today
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
-        contentValues.put(DatabaseContract.RegisterEntry.COLUMN_REGISTER_ENTRY_ID, registerEntryId);
         contentValues.put(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID, employeeId);
         contentValues.put(COLUMN_DATE, date);
         contentValues.put(DatabaseContract.RegisterEntry.COLUMN_TIME_IN, timeIn);
@@ -72,7 +72,15 @@ public class OpenHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_STATUS, status);
-        db.update(TABLE_NAME, contentValues, DatabaseContract.RegisterEntry.COLUMN_REGISTER_ENTRY_ID + "=" + registerEntryID, null);
+        db.update(TABLE_NAME, contentValues, DatabaseContract.RegisterEntry._ID + "=" + registerEntryID, null);
+        db.close();
+    }
+
+    public void updateRegisterEntryTime_Out( int registerEntryID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DatabaseContract.RegisterEntry.COLUMN_TIME_OUT, new SimpleDateFormat("HH:mm:ss").format(new Date()));
+        db.update(TABLE_NAME, contentValues, DatabaseContract.RegisterEntry._ID + "=" + registerEntryID, null);
         db.close();
     }
 
@@ -83,7 +91,8 @@ public class OpenHelper extends SQLiteOpenHelper {
 //        TODO: Select register entries by date and merge with employee table-->
         String sql = "SELECT * FROM " + DatabaseContract.RegisterEntry.TABLE_NAME + " INNER JOIN " + DatabaseContract.EmployeesEntry.TABLE_NAME
                 + " ON " + TABLE_NAME +"."+ DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID + " = " + DatabaseContract.EmployeesEntry.TABLE_NAME + "." + DatabaseContract.EmployeesEntry.COLUMN_EMPLOYEE_ID
-                + " WHERE " + DatabaseContract.RegisterEntry.COLUMN_DATE + " = " +  date;
+                + " WHERE " + DatabaseContract.RegisterEntry.COLUMN_DATE + " = "  + "\"" + date +"\";" ;
+        Log.d("ZOOM", ">>>>>>>>>>>>" + sql + "<<<<<<<<<<<<<<<<<<<<<<<");
         return db.rawQuery(sql, null);
     }
 
@@ -109,7 +118,7 @@ public class OpenHelper extends SQLiteOpenHelper {
 
     public Boolean isLoggedInAlready(String employeeID){
         String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
-        Cursor cursor = getRegisterByDate( "'" + currentDate + "'");
+        Cursor cursor = getRegisterByDate(currentDate );
         cursor.moveToFirst();
         while(cursor.moveToNext()){
             if(cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID)).equals(employeeID)){
@@ -120,14 +129,13 @@ public class OpenHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    public List getListRegisterEntries(){
+    public ArrayList<RegisterEntryModel> getListRegisterEntries(){
         registerEntry.clear();
         String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
-        Cursor cursor = getRegisterByDate( "'" + currentDate + "'");
+        Cursor cursor = getRegisterByDate( currentDate);
         if (cursor.moveToFirst()) {
             do {
                 RegisterEntryModel name = new RegisterEntryModel(
-                        cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_REGISTER_ENTRY_ID)),
                         cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID)),
                         cursor.getString(cursor.getColumnIndex(DatabaseContract.EmployeesEntry.COLUMN_FIRST_NAME)),
                         cursor.getString(cursor.getColumnIndex(DatabaseContract.EmployeesEntry.COLUMN_SURNAME)),
@@ -139,12 +147,11 @@ public class OpenHelper extends SQLiteOpenHelper {
                 );
                 registerEntry.add(name);
             } while (cursor.moveToNext());
-            {
+
+        }else{
 ///        TODO: show the user that there are no records yet
-            }
-        }else
+        }
         return registerEntry;
-        return null;
     }
 
 }

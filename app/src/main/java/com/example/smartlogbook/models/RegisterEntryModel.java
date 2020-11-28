@@ -11,7 +11,7 @@ public class RegisterEntryModel {
     private String time_out;
     private String status;
 
-    public RegisterEntryModel(String registerEntryId, String employeeId, String employeeName, String employeeSurname, String employeeDepartment, String date, String time_in, String time_out, String status) {
+    public RegisterEntryModel(String employeeId, String employeeName, String employeeSurname, String employeeDepartment, String date, String time_in, String time_out, String status) {
         this.registerEntryId = registerEntryId;
         this.employeeId = employeeId;
         this.employeeName = employeeName;

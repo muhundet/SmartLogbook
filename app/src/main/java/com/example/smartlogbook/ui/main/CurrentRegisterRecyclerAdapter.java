@@ -21,6 +21,7 @@ public class CurrentRegisterRecyclerAdapter extends RecyclerView.Adapter<Current
 
     public CurrentRegisterRecyclerAdapter(ArrayList<RegisterEntryModel> registerEntries) {
         this.registerEntries = registerEntries;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -41,10 +42,10 @@ public class CurrentRegisterRecyclerAdapter extends RecyclerView.Adapter<Current
 
     @Override
     public int getItemCount() {
-        return 0;
+        return registerEntries.size();
     }
 
-    public class CurrentRegisterViewHolder extends RecyclerView.ViewHolder{
+    public static class CurrentRegisterViewHolder extends RecyclerView.ViewHolder{
 
         TextView tvName, tvDepartment, tvTimeIn, tvTimeOut;
 
@@ -58,7 +59,8 @@ public class CurrentRegisterRecyclerAdapter extends RecyclerView.Adapter<Current
         }
 
         public void bind(RegisterEntryModel registerEntryModel){
-            tvName.setText(registerEntryModel.getEmployeeId() +", " + registerEntryModel.getEmployeeName() +", " +  registerEntryModel.getEmployeeSurname());
+            String name = registerEntryModel.getEmployeeId() +", " + registerEntryModel.getEmployeeName() +", " +  registerEntryModel.getEmployeeSurname();
+            tvName.setText(name);
             tvDepartment.setText(registerEntryModel.getEmployeeDepartment());
             tvTimeIn.setText(registerEntryModel.getTime_in());
             tvTimeOut.setText(registerEntryModel.getTime_out());

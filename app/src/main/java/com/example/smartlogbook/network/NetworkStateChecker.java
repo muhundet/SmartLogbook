@@ -50,7 +50,7 @@ public class NetworkStateChecker extends BroadcastReceiver {
                     do {
                         //calling the method to save the unsynced data to MySQL
                         saveRegisterEntry(
-                                cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_REGISTER_ENTRY_ID)),
+                                cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry._ID)),
                                 cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID)),
                                 cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_DATE)),
                                 cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_TIME_IN)),

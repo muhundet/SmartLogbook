@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.smartlogbook.MainActivity;
 import com.example.smartlogbook.R;
+import com.example.smartlogbook.database.DatabaseContract;
 import com.example.smartlogbook.database.OpenHelper;
 import com.example.smartlogbook.models.RegisterEntryModel;
 import com.example.smartlogbook.network.VolleyUtil;
@@ -51,7 +53,7 @@ import java.util.Map;
 public class FragmentMain extends Fragment {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
-    public static final String URL_SAVE_TO_SERVER = "http://192.168.1.107/saveRegisterEntry.php";
+    public static final String URL_SAVE_TO_SERVER = "http://192.168.100.4/saveRegisterEntry.php";
     public static final int ENTRY_SYNCED_WITH_SERVER = 1;
     public static final int ENTRY_NOT_SYNCED_WITH_SERVER = 0;
     public static final String DATA_SAVED_BROADCAST = "com.example.datasaved";
@@ -89,20 +91,28 @@ public class FragmentMain extends Fragment {
         final Button btnScanQr = root.findViewById(R.id.btn_scan_qr);
         final Button btnManualEntry = root.findViewById(R.id.btn_manual_entry);
         final RecyclerView rv = root.findViewById(R.id.rv_current_register);
+//        ArrayList registerEntry;
         mRegisterViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
-        mRegisterViewModel.getListRegisterEntry().observe(getViewLifecycleOwner(), new Observer<List<RegisterEntryModel>>() {
-            @Override
-            public void onChanged(List<RegisterEntryModel> registerEntryModels) {
-                final CurrentRegisterRecyclerAdapter adapter = new CurrentRegisterRecyclerAdapter((ArrayList<RegisterEntryModel>) registerEntryModels);
-                rv.setLayoutManager(new LinearLayoutManager(getContext()));
-                rv.setAdapter(adapter);
-            }
-        });
+
+
+//        mRegisterViewModel.getListRegisterEntry().observe(getViewLifecycleOwner(), new Observer<List<RegisterEntryModel>>() {
+//            @Override
+//            public void onChanged(List<RegisterEntryModel> registerEntryModels) {
+//                final CurrentRegisterRecyclerAdapter adapter = new CurrentRegisterRecyclerAdapter((ArrayList<RegisterEntryModel>) registerEntryModels);
+//                rv.setLayoutManager(new LinearLayoutManager(getContext()));
+//                rv.setAdapter(adapter);
+//            }
+//        });
+
+        ArrayList<RegisterEntryModel> registerEntry = OpenHelper.getOpenHelperInstance().getListRegisterEntries();
+        final CurrentRegisterRecyclerAdapter adapter = new CurrentRegisterRecyclerAdapter(registerEntry);
+        rv.setLayoutManager(new LinearLayoutManager(getContext()));
+        rv.setAdapter(adapter);
 
 
         btnManualEntry.setOnClickListener(new View.OnClickListener() {
@@ -114,7 +124,7 @@ public class FragmentMain extends Fragment {
         btnScanQr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                qrScan = new IntentIntegrator(Activity.getClass());
+                qrScan = new IntentIntegrator(getActivity());
                 qrScan.initiateScan();
             }
         });
@@ -160,11 +170,10 @@ public class FragmentMain extends Fragment {
 
          String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
          String currentTime = new SimpleDateFormat("HH:mm:ss").format(new Date());
-        final String registerEntryId = "movelast";
 //        TODO: to get the string values of date and time
         final String mDate = currentDate;
         final String mTimeIn = currentTime;
-        final String mTimeOut = "";
+        final String mTimeOut = "not out";
         final String mStatus = String.valueOf(ENTRY_SYNCED_WITH_SERVER);
         final String mNotStatus = String.valueOf(ENTRY_NOT_SYNCED_WITH_SERVER);
 
@@ -178,11 +187,11 @@ public class FragmentMain extends Fragment {
                             if (!obj.getBoolean("error")) {
                                 //if there is a success
                                 //storing the name to sqlite with status synced
-                                saveRegisterEntryToLocalStorage(registerEntryId, employeeId, mDate, mTimeIn, mTimeOut, mStatus);
+                                saveRegisterEntryToLocalStorage(employeeId, mDate, mTimeIn, mTimeOut, mStatus);
                             } else {
                                 //if there is some error
                                 //saving the name to sqlite with status unsynced
-                                saveRegisterEntryToLocalStorage(registerEntryId, employeeId, mDate, mTimeIn, mTimeOut, mNotStatus);
+                                saveRegisterEntryToLocalStorage(employeeId, mDate, mTimeIn, mTimeOut, mNotStatus);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -194,13 +203,12 @@ public class FragmentMain extends Fragment {
                     public void onErrorResponse(VolleyError error) {
                         progressDialog.dismiss();
                         //on error storing the name to sqlite with status unsynced
-                        saveRegisterEntryToLocalStorage(registerEntryId, employeeId, mDate, mTimeIn, mTimeOut, mNotStatus);
+                        saveRegisterEntryToLocalStorage(employeeId, mDate, mTimeIn, mTimeOut, mNotStatus);
                     }
                 }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
-                params.put("register_entry_id", registerEntryId);
                 params.put("employee_id", employeeId);
                 params.put("date", mDate);
                 params.put("time_in", mTimeIn);
@@ -212,9 +220,9 @@ public class FragmentMain extends Fragment {
         VolleyUtil.getInstance(getContext()).addToRequestQueue(stringRequest);
     }
 
-    private void saveRegisterEntryToLocalStorage(String registerEntryId, String employeeId, String date, String timeIn, String timeOut, String status) {
+    private void saveRegisterEntryToLocalStorage(String employeeId, String date, String timeIn, String timeOut, String status) {
 
-        db.saveRegisterEntry(registerEntryId, employeeId, date, timeIn, timeOut, status);
+        db.saveRegisterEntry(employeeId, date, timeIn, timeOut, status);
 //        TODO: notify data changed to current and all registers
     }
 
@@ -230,7 +238,17 @@ public class FragmentMain extends Fragment {
                     if(!OpenHelper.getOpenHelperInstance().isLoggedInAlready(employeeId)){
                         saveRegisterEntryToServer(employeeId);
                     }else{
-//                        TODO: update to server and local
+//                        TODO: update to server and local time out
+                        Cursor cursor = db.getRegisterByDate(new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
+                        if (cursor.moveToFirst()) {
+                            do {
+                                 if(cursor.getString(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID)).equals(employeeId)){
+                                     OpenHelper.getOpenHelperInstance().updateRegisterEntryTime_Out(cursor.getInt(cursor.getColumnIndex(DatabaseContract.RegisterEntry.COLUMN_EMPLOYEE_ID)));
+                                 break;
+                                 }
+
+                            } while (cursor.moveToNext());
+                        }
 
                     }
                 }

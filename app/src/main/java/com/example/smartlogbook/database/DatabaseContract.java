@@ -29,7 +29,6 @@ public final class DatabaseContract {
 
     public static final class RegisterEntry implements BaseColumns{
         public static final String TABLE_NAME = "register_entry";
-        public static final String COLUMN_REGISTER_ENTRY_ID = "register_entry_id";
         public static final String COLUMN_EMPLOYEE_ID = "employee_id";
         public static final String COLUMN_DATE = "date";
         public static final String COLUMN_TIME_IN = "time_in";
@@ -37,8 +36,7 @@ public final class DatabaseContract {
         public static final String COLUMN_STATUS = "status";
 
         public static final String SQL_CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" +
-                COLUMN_REGISTER_ENTRY_ID + " TEXT UNIQUE NOT NULL, " +
-                COLUMN_EMPLOYEE_ID + " TEXT UNIQUE NOT NULL, " +
+                COLUMN_EMPLOYEE_ID + " TEXT NOT NULL, " +
                 COLUMN_DATE + " TEXT NOT NULL, " +
                 COLUMN_TIME_IN + " TEXT NOT NULL, "+
                 COLUMN_TIME_OUT + ", " +
